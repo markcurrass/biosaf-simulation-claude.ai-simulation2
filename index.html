@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BioSAF Plant Interactive Simulation Dashboard (UK/EU)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+  :root {
+    --bg: #071029;
+    --card: #0f1724;
+    --muted: #9aa6b2;
+    --accent: #06b6d4;
+    --green: #10b981;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --purple: #8b5cf6;
+  }
+  
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg, #031024, #071029);
+    color: #e6eef6;
+    padding: 20px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.15));
+    border-radius: 16px;
+    padding: 32px;
+    margin-bottom: 24px;
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+  
+  .header h1 {
+    margin: 0 0 12px 0;
+    font-size: 2.5rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  
+  .header p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 1.1rem;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    background: rgba(15, 23, 36, 0.5);
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .tab {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e6eef6;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  .tab:hover {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  }
+  
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  }
+  
+  .card-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 20px;
+  }
+  
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e6eef6;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+  }
+  
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.05);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+  }
+  
+  .slider-container {
+    margin-bottom: 24px;
+  }
+  
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.875rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  .slider-value {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  
+  input[type="range"] {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+    transition: all 0.2s;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.8);
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+  }
+  
+  .metric-card {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(16, 185, 129, 0.08));
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    text-align: center;
+    transition: all 0.3s;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(6, 182, 212, 0.2);
+  }
+  
+  .metric-label {
+    color: var(--muted);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  
+  .metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+  
+  .metric-unit {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  
+  button {
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    color: var(--accent);
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    user-select: none;
+    transition: all 0.3s;
+    margin-right: 8px;
+    font-family: inherit;
+  }
+  
+  button:hover {
+    background: rgba(6, 182, 212, 0.25);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  }
+  
+  button:active {
+    transform: translateY(0);
+  }
+  
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    color: #000;
+    font-size: 1.1rem;
+    padding: 16px 40px;
+    border: none;
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+  }
+  
+  button.primary:hover {
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.6);
+  }
+  
+  button.danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  
+  button.danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+  }
+  
+  th, td {
+    padding: 14px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  th {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(6, 182, 212, 0.05);
+  }
+  
+  td {
+    color: #e6eef6;
+  }
+  
+  .warning-box {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 4px solid var(--yellow);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .error-box {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 4px solid var(--red);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .success-box {
+    background: rgba(16, 185, 129, 0.1);
+    border-left: 4px solid var(--green);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .h2-card {
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .h2-card.selected {
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+  }
+  
+  .equipment-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .equipment-item:hover {
+    background: rgba(255,255,255,0.05);
+  }
+  
+  .equipment-item input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+  
+  .equipment-item label {
+    flex: 1;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  
+  .chart-container {
+    position: relative;
+    height: 350px;
+    margin-top: 20px;
+  }
+  
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 1.2rem;
+  }
+  
+  .loading::after {
+    content: '...';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+  
+  @keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+  }
+  
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .badge-mandatory {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--yellow);
+  }
+  
+  .badge-optional {
+    background: rgba(139, 92, 246, 0.2);
+    color: var(--purple);
+  }
+  
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 {
+      grid-template-columns: 1fr;
+    }
+    
+    .header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .tabs {
+      flex-direction: column;
+    }
+    
+    .tab {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🛩️ BioSAF Plant Interactive Simulation (UK/EU)</h1>
+      <p>Modular Fischer-Tropsch SAF Production (10 ML/yr Target) - Configure, Simulate, Optimise</p>
+    </div>
+    
+    <div class="tabs" id="tabs"></div>
+    <div id="content"></div>
+  </div>
+
+<script>
+// ============================================================================
+// DATA MODELS (UK/EU PRICES)
+// ============================================================================
+
+const feedstockDatabase = {
+  'forestry_residue': {
+    name: 'Forestry Residue',
+    moisture: 40,
+    ashContent: 2.5,
+    calorificValue: 19.5,
+    density: 450,
+    cost: 38, // £38/tonne (converted from $45)
+    carbon: 50.2,
+    hydrogen: 6.1,
+    oxygen: 42.5,
+    nitrogen: 0.3,
+    sulfur: 0.02
+  },
+  'agricultural_waste': {
+    name: 'Agricultural Waste (Straw)',
+    moisture: 15,
+    ashContent: 8.5,
+    calorificValue: 17.2,
+    density: 120,
+    cost: 29, // £29/tonne
+    carbon: 46.8,
+    hydrogen: 5.9,
+    oxygen: 44.1,
+    nitrogen: 0.8,
+    sulfur: 0.15
+  },
+  'energy_crops': {
+    name: 'Energy Crops (Miscanthus)',
+    moisture: 20,
+    ashContent: 3.2,
+    calorificValue: 18.8,
+    density: 180,
+    cost: 54, // £54/tonne
+    carbon: 48.5,
+    hydrogen: 6.3,
+    oxygen: 43.8,
+    nitrogen: 0.6,
+    sulfur: 0.08
+  },
+  'msw': {
+    name: 'Municipal Solid Waste',
+    moisture: 35,
+    ashContent: 18.5,
+    calorificValue: 12.5,
+    density: 250,
+    cost: -17, // £17 credit/tonne (gate fee)
+    carbon: 42.3,
+    hydrogen: 5.8,
+    oxygen: 38.2,
+    nitrogen: 1.2,
+    sulfur: 0.25
+  }
+};
+
+const equipmentModules = {
+  'feedstock_shredder': {
+    id: 'FS-01',
+    name: 'Shredder/Conveyor System',
+    category: 'Feedstock Preparation',
+    duty: '15-20 t/hr biomass',
+    suppliers: ['WEIMA', 'Vecoplan', 'Andritz', 'Bühler'],
+    containerSize: '40ft HC',
+    powerLoad: 2000,
+    capex: 375000, // £375k (converted from $450k at 1.2 rate)
+    opex: 29000,
+    mandatory: true,
+    count: 1
+  },
+  'feedstock_dryer': {
+    id: 'FD-01',
+    name: 'Rotary Dryer/Cyclone',
+    category: 'Feedstock Preparation',
+    duty: '15-20 t/hr, moisture to <10%',
+    suppliers: ['Andritz Gouda', 'Bühler'],
+    containerSize: '40ft HC',
+    steamLoad: 2.5,
+    capex: 458000,
+    opex: 37500,
+    mandatory: true,
+    count: 1
+  },
+  'metal_separator': {
+    id: 'MS-01',
+    name: 'Magnetic Separator',
+    category: 'Feedstock Preparation',
+    duty: '15-20 t/hr',
+    suppliers: ['Bühler', 'Steinert'],
+    containerSize: '20ft',
+    powerLoad: 20,
+    capex: 62500,
+    opex: 6700,
+    mandatory: true,
+    count: 1
+  },
+  'gasifier_reactor': {
+    id: 'GR-01',
+    name: 'Gasifier Reactor',
+    category: 'Gasification',
+    duty: '~131 t/day biomass input',
+    suppliers: ['EQTEC', 'Outotec', 'Xylowatt'],
+    containerSize: 'Site-built',
+    thermalDuty: 27300,
+    capex: 2917000,
+    opex: 233000,
+    mandatory: true,
+    count: 1
+  },
+  'syngas_cleanup': {
+    id: 'SC-01',
+    name: 'Cyclones/Hot Filters',
+    category: 'Gasification',
+    duty: '5,000-8,000 Nm³/hr syngas',
+    suppliers: ['Babcock & Wilcox', 'Ahlstrom'],
+    containerSize: '40ft HC',
+    powerLoad: 250,
+    capex: 350000,
+    opex: 31700,
+    mandatory: true,
+    count: 1
+  },
+  'wet_scrubber': {
+    id: 'WS-01',
+    name: 'Wet Scrubber',
+    category: 'Gasification',
+    duty: '5,000-8,000 Nm³/hr',
+    suppliers: ['CECO', 'Envitech'],
+    containerSize: '40ft HC',
+    powerLoad: 100,
+    capex: 233000,
+    opex: 20800,
+    mandatory: true,
+    count: 1
+  },
+  'main_compressor': {
+    id: 'CP-01',
+    name: 'Main Syngas Compressor',
+    category: 'Compression',
+    duty: '5,000-8,000 Nm³/hr',
+    suppliers: ['Siemens Energy', 'MAN', 'Atlas Copco'],
+    containerSize: '40ft HC',
+    powerLoad: 1500,
+    capex: 792000,
+    opex: 70800,
+    mandatory: true,
+    count: 1
+  },
+  'recycle_compressor': {
+    id: 'RC-01',
+    name: 'Recycle Compressor',
+    category: 'Compression',
+    duty: '20% recycle stream',
+    suppliers: ['Siemens', 'Howden'],
+    containerSize: '10ft',
+    powerLoad: 300,
+    capex: 150000,
+    opex: 15000,
+    mandatory: false,
+    count: 1
+  },
+  'ft_reactor': {
+    id: 'FT-01',
+    name: 'FT Reactor Cluster',
+    category: 'Fischer-Tropsch',
+    duty: '1,000 kg/h syngas per unit',
+    suppliers: ['Velocys', 'Johnson Matthey', 'Sasol'],
+    containerSize: '2x40ft HC',
+    heatExchange: 500,
+    capex: 2333000,
+    opex: 183000,
+    mandatory: true,
+    count: 1,
+    scalable: true,
+    catalystReplacement: 292000,
+    catalystLife: 8760
+  },
+  'hydrocracker': {
+    id: 'HC-01',
+    name: 'Hydrocracker Reactor',
+    category: 'Upgrading',
+    duty: '~1,000 kg/h FT liquids',
+    suppliers: ['Topsoe', 'Johnson Matthey', 'UOP'],
+    containerSize: '40ft HC',
+    furnaceDuty: 2500,
+    capex: 1458000,
+    opex: 117000,
+    mandatory: true,
+    count: 1,
+    catalystCost: 150000
+  },
+  'psa_h2': {
+    id: 'PSA-01',
+    name: 'PSA H2 Purification',
+    category: 'Upgrading',
+    duty: '5,000-7,000 Nm³/hr',
+    suppliers: ['Linde', 'Air Liquide'],
+    containerSize: '40ft HC',
+    powerLoad: 500,
+    capex: 567000,
+    opex: 45800,
+    mandatory: true,
+    count: 1
+  },
+  'fractionation': {
+    id: 'FR-01',
+    name: 'Fractionation Column',
+    category: 'Upgrading',
+    duty: 'C9-C14 kerosene cut',
+    suppliers: ['Sulzer', 'Neles'],
+    containerSize: '2x40ft HC',
+    steamLoad: 5,
+    capex: 767000,
+    opex: 60000,
+    mandatory: true,
+    count: 1
+  },
+  'electrolyzer': {
+    id: 'EL-01',
+    name: 'PEM Electrolyzer Module',
+    category: 'Hydrogen Supply',
+    duty: '500-600 kg/h H2',
+    suppliers: ['ITM Power', 'Nel', 'Siemens', 'Plug Power'],
+    containerSize: '8-10x40ft',
+    powerLoad: 27000,
+    capex: 27000000, // £27M (UK electrolyzer costs slightly lower)
+    opex: 675000,
+    mandatory: false,
+    count: 1,
+    waterConsumption: 4500
+  },
+  'smr_unit': {
+    id: 'SMR-01',
+    name: 'Steam Methane Reformer',
+    category: 'Hydrogen Supply',
+    duty: '500-600 kg/h H2',
+    suppliers: ['Linde', 'KBR', 'Air Liquide'],
+    containerSize: '3-4x40ft',
+    gasConsumption: 2100,
+    capex: 8000000, // £8M
+    opex: 400000,
+    mandatory: false,
+    count: 1,
+    co2Emissions: 5700
+  },
+  'mcc_transformers': {
+    id: 'EL-02',
+    name: 'MCC/Transformers',
+    category: 'Utilities',
+    duty: 'Power distribution',
+    suppliers: ['Siemens', 'Schneider'],
+    containerSize: '40ft HC',
+    capacity: 7500,
+    capex: 483000,
+    opex: 37500,
+    mandatory: true,
+    count: 1
+  },
+  'water_treatment': {
+    id: 'WT-01',
+    name: 'Water Treatment Skid',
+    category: 'Utilities',
+    duty: 'Process water treatment',
+    suppliers: ['Veolia', 'SUEZ'],
+    containerSize: '40ft HC',
+    powerLoad: 500,
+    capex: 317000,
+    opex: 29000,
+    mandatory: true,
+    count: 1
+  },
+  'control_room': {
+    id: 'CR-01',
+    name: 'Control Room Container',
+    category: 'Utilities',
+    duty: 'SCADA + DCS',
+    suppliers: ['Siemens', 'ABB', 'Yokogawa'],
+    containerSize: '40ft HC',
+    powerLoad: 50,
+    capex: 375000,
+    opex: 29000,
+    mandatory: true,
+    count: 1
+  },
+  'laboratory': {
+    id: 'LAB-01',
+    name: 'Laboratory Container',
+    category: 'Utilities',
+    duty: 'ASTM D1655/DEF STAN tests',
+    suppliers: ['Agilent', 'Thermo Fisher'],
+    containerSize: '40ft HC',
+    powerLoad: 100,
+    capex: 433000,
+    opex: 35000,
+    mandatory: true,
+    count: 1
+  }
+};
+
+// ============================================================================
+// APPLICATION STATE
+// ============================================================================
+
+const appState = {
+  config: {
+    projectName: 'BioSAF Plant Simulation (UK/EU)',
+    feedstock: null,
+    feedRate: 15,
+    operatingHours: 8000,
+    hydrogenSource: 'smr',
+    selectedModules: [],
+    economics: {
+      safPrice: 5.00, // £5.00/L (UK/EU market rate)
+      naphthaPrice: 0.65, // £0.65/L
+      dieselPrice: 1.00, // £1.00/L
+      electricityPrice: 0.10, // £0.10/kWh (UK industrial rate)
+      electricitySellPrice: 0.08, // £0.08/kWh
+      naturalGasPrice: 0.25, // £0.25/kg
+      waterPrice: 0.002, // £0.002/L
+      carbonPrice: 80, // £80/tonne (EU ETS)
+      discountRate: 0.10,
+      projectLife: 20,
+      gridCO2Intensity: 0.23 // UK grid intensity (kg CO2/kWh)
+    },
+    process: {
+      gasifierEfficiency: 0.75,
+      equivalenceRatio: 0.25,
+      gasifierTemp: 850,
+      ftConversion: 0.70,
+      ftSelectivity: 0.85,
+      hydrocrackerYield: 0.92,
+      isomerizationYield: 0.96
+    }
+  },
+  
+  simulation: {
+    isRunning: false,
+    hasResults: false,
+    results: null,
+    warnings: [],
+    errors: []
+  },
+  
+  ui: {
+    activeTab: 'configuration',
+    autoSimulate: false
+  },
+  
+  scenarios: []
+};
+
+let charts = {};
+
+// ============================================================================
+// CALCULATION ENGINES (unchanged - all calculations remain the same)
+// ============================================================================
+
+function calculateFeedstockPrep(feedstock, feedRate) {
+  const initialMoisture = feedstock.moisture;
+  const targetMoisture = 10;
+  
+  const wetBiomass = feedRate;
+  const dryMatter = wetBiomass * (100 - initialMoisture) / 100;
+  const waterRemoved = wetBiomass - dryMatter * (100 / (100 - targetMoisture));
+  const dryBiomassOutput = dryMatter / (1 - targetMoisture / 100);
+  
+  const latentHeat = 2.26;
+  const sensibleHeat = 0.24;
+  const dryingEnergyMJ = waterRemoved * 1000 * (latentHeat + sensibleHeat);
+  const steamRequired = dryingEnergyMJ / 2.1 / 1000;
+  const electricityRequired = feedRate * 150;
+  
+  return {
+    waterRemoved,
+    steamRequired,
+    dryBiomassOutput,
+    energyRequired: dryingEnergyMJ,
+    electricityRequired,
+    thermalEfficiency: 0.7
+  };
+}
+
+function calculateGasification(dryBiomass, feedstock, config) {
+  const gasifierEff = config.gasifierEfficiency || 0.75;
+  const eqRatio = config.equivalenceRatio || 0.25;
+  const temp = config.gasifierTemp || 850;
+  
+  const baseYield = 2.5;
+  const ashPenalty = feedstock.ashContent / 100;
+  const syngasYield = baseYield * gasifierEff * (1 - ashPenalty * 0.5);
+  const syngasFlow = dryBiomass * 1000 * syngasYield;
+  
+  const carbonRatio = feedstock.carbon / (feedstock.carbon + feedstock.hydrogen + feedstock.oxygen);
+  const hydrogenRatio = feedstock.hydrogen / (feedstock.carbon + feedstock.hydrogen + feedstock.oxygen);
+  
+  const composition = {
+    H2: 12 + hydrogenRatio * 25 + (temp - 800) * 0.05,
+    CO: 18 + carbonRatio * 15,
+    CO2: 12 + (1 - gasifierEff) * 10,
+    CH4: 6 + (900 - temp) * 0.02,
+    N2: 48 - eqRatio * 30,
+    H2S: feedstock.sulfur * 0.1,
+    tar: (1 - gasifierEff) * 2
+  };
+  
+  const total = Object.values(composition).reduce((sum, val) => sum + val, 0);
+  Object.keys(composition).forEach(key => {
+    composition[key] = (composition[key] / total) * 100;
+  });
+  
+  const h2coRatio = composition.H2 / composition.CO;
+  const ashOutput = dryBiomass * (feedstock.ashContent / 100);
+  const charOutput = dryBiomass * (1 - gasifierEff) * 0.1;
+  const syngasLHV = 5.5;
+  const thermalOutput = syngasFlow * syngasLHV / 3600;
+  const co2Output = syngasFlow * (composition.CO2 / 100) * 1.98 / 1000;
+  
+  return {
+    syngasFlow,
+    composition,
+    h2coRatio,
+    ashOutput,
+    charOutput,
+    thermalOutput,
+    syngasLHV,
+    co2Output,
+    temperature: temp
+  };
+}
+
+function calculateFTSynthesis(syngas, config) {
+  const targetH2CO = 2.1;
+  const actualH2CO = syngas.h2coRatio;
+  
+  const coFlowNm3 = syngas.syngasFlow * (syngas.composition.CO / 100);
+  const h2FlowNm3 = syngas.syngasFlow * (syngas.composition.H2 / 100);
+  const h2RequiredNm3 = coFlowNm3 * targetH2CO;
+  const h2ShortfallNm3 = Math.max(0, h2RequiredNm3 - h2FlowNm3);
+  const h2ShortfallKg = h2ShortfallNm3 / 11.2;
+  
+  const coConversion = config.ftConversion || 0.70;
+  const selectivity = config.ftSelectivity || 0.85;
+  const coConverted = coFlowNm3 * coConversion;
+  const hydrocarbonYield = 0.625;
+  const totalLiquidProduction = coConverted * hydrocarbonYield;
+  
+  const productDistribution = {
+    C1_C4: 12.5,
+    C5_C11: 35.2,
+    C12_C18: 42.8,
+    C19plus: 9.5
+  };
+  
+  const safFraction = totalLiquidProduction * (productDistribution.C12_C18 / 100) * 0.75;
+  const reactionHeatMJ = coConverted * 165 / 22.4;
+  const waterProducedKg = coConverted * 18 / 22.4;
+  
+  return {
+    h2Shortfall: h2ShortfallKg,
+    coConversion,
+    coConverted,
+    liquidProduction: totalLiquidProduction,
+    safFraction,
+    productDistribution,
+    reactionHeat: reactionHeatMJ,
+    waterProduced: waterProducedKg,
+    selectivity
+  };
+}
+
+function calculateUpgrading(ftLiquids, config) {
+  const hydrocrackerYield = config.hydrocrackerYield || 0.92;
+  const isomerizationYield = config.isomerizationYield || 0.96;
+  
+  const finalSAF = ftLiquids.safFraction * hydrocrackerYield * isomerizationYield;
+  const h2Consumption = ftLiquids.liquidProduction * 0.025;
+  const naphthaOutput = ftLiquids.liquidProduction * (ftLiquids.productDistribution.C5_C11 / 100) * hydrocrackerYield;
+  const dieselOutput = ftLiquids.liquidProduction * (ftLiquids.productDistribution.C12_C18 / 100) * 0.25 * hydrocrackerYield;
+  const offGases = ftLiquids.liquidProduction * (1 - hydrocrackerYield);
+  const heatingDuty = ftLiquids.liquidProduction * 0.8;
+  
+  return {
+    safOutput: finalSAF,
+    naphthaOutput,
+    dieselOutput,
+    offGases,
+    h2Consumption,
+    heatingDuty,
+    totalYield: hydrocrackerYield * isomerizationYield
+  };
+}
+
+function calculateEnergyBalance(simulation, config) {
+  const biomassEnergy = simulation.feedRate * 1000 * simulation.feedstock.calorificValue;
+  
+  let electricityConsumptionKW = 0;
+  electricityConsumptionKW += simulation.prep.electricityRequired;
+  electricityConsumptionKW += 250;
+  const compressionPower = 1500 * (simulation.gasifier.syngasFlow / 6500);
+  electricityConsumptionKW += compressionPower;
+  electricityConsumptionKW += 500;
+  
+  if (simulation.hydrogenSource === 'electrolyzer') {
+    const h2Required = simulation.hydrogen.required;
+    const electrolyzerPower = h2Required * 55;
+    electricityConsumptionKW += electrolyzerPower;
+  }
+  
+  const electricityConsumptionMJ = electricityConsumptionKW * 3.6;
+  
+  let naturalGasEnergyMJ = 0;
+  if (simulation.hydrogenSource === 'smr') {
+    const h2Required = simulation.hydrogen.required;
+    const ngRequired = h2Required * 3.5;
+    const ngLHV = 50;
+    naturalGasEnergyMJ = ngRequired * ngLHV;
+  }
+  
+  const totalEnergyInput = biomassEnergy + electricityConsumptionMJ + naturalGasEnergyMJ;
+  
+  const safLHV = 43.5;
+  const naphthaLHV = 44.2;
+  const dieselLHV = 43.1;
+  
+  const safEnergy = simulation.upgrading.safOutput * safLHV;
+  const naphthaEnergy = simulation.upgrading.naphthaOutput * naphthaLHV;
+  const dieselEnergy = simulation.upgrading.dieselOutput * dieselLHV;
+  const totalProductEnergy = safEnergy + naphthaEnergy + dieselEnergy;
+  
+  const wasteHeat = simulation.ft.reactionHeat + simulation.upgrading.heatingDuty * 0.3;
+  const efficiency = (totalProductEnergy / totalEnergyInput) * 100;
+  
+  return {
+    inputs: {
+      biomass: biomassEnergy,
+      electricity: electricityConsumptionMJ,
+      naturalGas: naturalGasEnergyMJ,
+      total: totalEnergyInput
+    },
+    outputs: {
+      saf: safEnergy,
+      naphtha: naphthaEnergy,
+      diesel: dieselEnergy,
+      total: totalProductEnergy
+    },
+    electricityConsumption: electricityConsumptionKW,
+    compressionPower,
+    wasteHeat,
+    efficiency,
+    netElectricity: -electricityConsumptionKW
+  };
+}
+
+function calculateEconomics(simulation, config) {
+  const equipmentCost = simulation.selectedModules.reduce((sum, m) => sum + (m.capex * m.count), 0);
+  
+  const capex = {
+    equipment: equipmentCost,
+    installation: equipmentCost * 0.25,
+    engineering: equipmentCost * 0.15,
+    contingency: equipmentCost * 0.20,
+    landPrep: 417000, // £417k (converted)
+    infrastructure: 1000000, // £1M
+    workingCapital: equipmentCost * 0.10
+  };
+  
+  const totalCapex = Object.values(capex).reduce((sum, val) => sum + val, 0);
+  
+  const operatingHours = simulation.operatingHours;
+  const feedstockCost = simulation.feedstock.cost * simulation.feedRate * operatingHours;
+  const electricityCost = (simulation.energyBalance.electricityConsumption / 1000) * config.economics.electricityPrice * operatingHours;
+  
+  let naturalGasCost = 0;
+  if (simulation.hydrogenSource === 'smr') {
+    const h2Annual = simulation.hydrogen.required * operatingHours;
+    const ngRequired = h2Annual * 3.5;
+    naturalGasCost = ngRequired * config.economics.naturalGasPrice;
+  }
+  
+  let pipelineH2Cost = 0;
+  if (simulation.hydrogenSource === 'pipeline') {
+    const h2Annual = simulation.hydrogen.required * operatingHours;
+    pipelineH2Cost = h2Annual * 3.75; // £3.75/kg for pipeline H2
+  }
+  
+  const waterCost = 5000 * config.economics.waterPrice * operatingHours;
+  const laborCost = 1250000; // £1.25M (UK labor costs)
+  const maintenanceCost = equipmentCost * 0.03;
+  
+  let catalystCost = 0;
+  const ftModule = simulation.selectedModules.find(m => m.id === 'FT-01');
+  if (ftModule && ftModule.catalystReplacement) {
+    catalystCost += ftModule.catalystReplacement / 3;
+  }
+  const hcModule = simulation.selectedModules.find(m => m.id === 'HC-01');
+  if (hcModule && hcModule.catalystCost) {
+    catalystCost += hcModule.catalystCost / 2;
+  }
+  
+  const insuranceCost = totalCapex * 0.015;
+  const overheadsCost = 375000; // £375k
+  
+  const opex = {
+    feedstock: feedstockCost,
+    electricity: electricityCost,
+    naturalGas: naturalGasCost,
+    pipelineH2: pipelineH2Cost,
+    water: waterCost,
+    labor: laborCost,
+    maintenance: maintenanceCost,
+    catalyst: catalystCost,
+    insurance: insuranceCost,
+    overheads: overheadsCost
+  };
+  
+  const totalOpex = Object.values(opex).reduce((sum, val) => sum + val, 0);
+  
+  const safProductionML = simulation.output.safML;
+  const safRevenue = safProductionML * 1000000 * config.economics.safPrice;
+  const naphthaProduction = simulation.upgrading.naphthaOutput * operatingHours;
+  const naphthaRevenue = naphthaProduction * config.economics.naphthaPrice;
+  const dieselProduction = simulation.upgrading.dieselOutput * operatingHours;
+  const dieselRevenue = dieselProduction * config.economics.dieselPrice;
+  
+  let carbonCredits = 0;
+  if (simulation.environmental && simulation.environmental.reductionPercentage > 70) {
+    carbonCredits = (simulation.environmental.co2Avoided / 1000) * config.economics.carbonPrice;
+  }
+  
+  const revenue = {
+    saf: safRevenue,
+    naphtha: naphthaRevenue,
+    diesel: dieselRevenue,
+    carbonCredits
+  };
+  
+  const totalRevenue = Object.values(revenue).reduce((sum, val) => sum + val, 0);
+  const annualCashFlow = totalRevenue - totalOpex;
+  const simplePayback = totalCapex / annualCashFlow;
+  
+  const discountRate = config.economics.discountRate;
+  const projectLife = config.economics.projectLife || 20;
+  let npv = -totalCapex;
+  for (let year = 1; year <= projectLife; year++) {
+    npv += annualCashFlow / Math.pow(1 + discountRate, year);
+  }
+  
+  const irr = ((annualCashFlow / totalCapex) - discountRate) * 100 + discountRate * 100;
+  const crf = (discountRate * Math.pow(1 + discountRate, projectLife)) / (Math.pow(1 + discountRate, projectLife) - 1);
+  const annualizedCapex = totalCapex * crf;
+  const lcosaf = (annualizedCapex + totalOpex) / (safProductionML * 1000000);
+  
+  return {
+    capex,
+    totalCapex,
+    opex,
+    totalOpex,
+    revenue,
+    totalRevenue,
+    annualCashFlow,
+    safProduction: safProductionML,
+    lcosaf,
+    paybackPeriod: simplePayback,
+    npv,
+    irr,
+    capexPerML: totalCapex / 10,
+    opexPerML: totalOpex / safProductionML
+  };
+}
+
+function calculateEnvironmentalImpact(simulation, config) {
+  const operatingHours = simulation.operatingHours;
+  const biomassCarbonInput = simulation.massBalance.inputs.biomassDry * (simulation.feedstock.carbon / 100) * operatingHours * 1000;
+  
+  const processCO2 = {
+    gasification: simulation.gasification.co2Output * operatingHours * 1000,
+    combustion: biomassCarbonInput * 0.15 * (44/12),
+    smr: 0,
+    electricityGrid: 0,
+    fugitive: biomassCarbonInput * 0.02 * (44/12)
+  };
+  
+  if (simulation.hydrogenSource === 'smr') {
+    const h2Annual = simulation.hydrogen.required * operatingHours;
+    processCO2.smr = h2Annual * 9.5 * 1000;
+  }
+  
+  if (simulation.energyBalance.netElectricity < 0) {
+    const gridElectricity = Math.abs(simulation.energyBalance.netElectricity) * operatingHours;
+    processCO2.electricityGrid = gridElectricity * config.economics.gridCO2Intensity * 1000;
+  }
+  
+  const totalEmissions = Object.values(processCO2).reduce((sum, val) => sum + val, 0);
+  const safProduction = simulation.massBalance.outputs.saf * operatingHours;
+  const fossilJetFuelEmissions = safProduction * 3.16;
+  const co2Avoided = fossilJetFuelEmissions - totalEmissions;
+  const reductionPercentage = (co2Avoided / fossilJetFuelEmissions) * 100;
+  
+  const waterUse = {
+    drying: simulation.prep.waterRemoved * operatingHours * 1000,
+    scrubbing: 50 * operatingHours * 1000,
+    cooling: 100 * operatingHours * 1000,
+    electrolyzer: simulation.hydrogenSource === 'electrolyzer' ? simulation.hydrogen.required * 9 * operatingHours * 1000 : 0,
+    boilerMakeup: 20 * operatingHours * 1000
+  };
+  
+  const totalWaterUse = Object.values(waterUse).reduce((sum, val) => sum + val, 0);
+  
+  const wasteStreams = {
+    ash: simulation.gasification.ashOutput * operatingHours,
+    char: simulation.gasification.charOutput * operatingHours,
+    wastewater: 45 * operatingHours,
+    spentCatalyst: simulation.economics.opex.catalyst / 50000
+  };
+  
+  const totalTEU = calculateTotalTEU(simulation.selectedModules);
+  const footprint = {
+    containerArea: totalTEU * 6,
+    accessRoads: 500,
+    feedstockStorage: 2000,
+    productStorage: 1000,
+    greenSpace: 500,
+    totalArea: 0
+  };
+  footprint.totalArea = Object.values(footprint).reduce((sum, val) => sum + val, 0);
+  
+  return {
+    totalEmissions,
+    emissionsBreakdown: processCO2,
+    fossilBaseline: fossilJetFuelEmissions,
+    co2Avoided,
+    reductionPercentage,
+    waterConsumption: totalWaterUse,
+    waterBreakdown: waterUse,
+    wasteStreams,
+    landFootprint: footprint,
+    emissionsIntensity: totalEmissions / safProduction,
+    waterIntensity: totalWaterUse / safProduction
+  };
+}
+
+function validateResults(results) {
+  const warnings = [];
+  
+  if (results.gasification.h2coRatio < 1.8) {
+    warnings.push({
+      severity: 'error',
+      location: 'Gasification',
+      message: `H2/CO ratio (${results.gasification.h2coRatio.toFixed(2)}) too low for FT synthesis`,
+      solution: 'Add significant hydrogen supplementation or change gasifier conditions'
+    });
+  } else if (results.gasification.h2coRatio < 2.0) {
+    warnings.push({
+      severity: 'warning',
+      location: 'FT Reactor',
+      message: `H2/CO ratio (${results.gasification.h2coRatio.toFixed(2)}) below optimal (2.0-2.2)`,
+      solution: 'Add hydrogen or adjust gasifier steam injection'
+    });
+  } else if (results.gasification.h2coRatio > 2.5) {
+    warnings.push({
+      severity: 'warning',
+      location: 'FT Reactor',
+      message: `H2/CO ratio (${results.gasification.h2coRatio.toFixed(2)}) above optimal`,
+      solution: 'Reduce hydrogen input or adjust gasifier conditions'
+    });
+  }
+  
+  const targetOutput = 10;
+  const actualOutput = results.output.safML;
+  const utilization = (actualOutput / targetOutput) * 100;
+  
+  if (utilization < 70) {
+    warnings.push({
+      severity: 'warning',
+      location: 'Plant Capacity',
+      message: `Low capacity utilisation (${utilization.toFixed(0)}% of 10 ML/yr target)`,
+      solution: 'Increase feedstock throughput or operating hours'
+    });
+  } else if (utilization > 110) {
+    warnings.push({
+      severity: 'warning',
+      location: 'Plant Capacity',
+      message: `Operating above design capacity (${utilization.toFixed(0)}%)`,
+      solution: 'Consider additional FT reactor modules or reduce throughput'
+    });
+  }
+  
+  if (results.economics.lcosaf > 6.0) {
+    warnings.push({
+      severity: 'warning',
+      location: 'Economics',
+      message: `LCOSAF (£${results.economics.lcosaf.toFixed(2)}/L) exceeds typical UK SAF market price`,
+      solution: 'Review feedstock costs, hydrogen source, or increase production scale'
+    });
+  }
+  
+  if (results.energyBalance.efficiency < 55) {
+    warnings.push({
+      severity: 'warning',
+      location: 'Energy Efficiency',
+      message: `Low overall efficiency (${results.energyBalance.efficiency.toFixed(1)}%)`,
+      solution: 'Improve heat integration or consider adding recycle compressor'
+    });
+  }
+  
+  if (results.environmental.reductionPercentage < 70) {
+    warnings.push({
+      severity: 'warning',
+      location: 'Environmental',
+      message: `CO2 reduction (${results.environmental.reductionPercentage.toFixed(1)}%) below SAF standards (>70%)`,
+      solution: 'Switch to renewable electricity for electrolyser or improve process efficiency'
+    });
+  }
+  
+  return warnings;
+}
+
+// ============================================================================
+// SIMULATION ENGINE
+// ============================================================================
+
+function runSimulation() {
+  if (appState.simulation.isRunning) return;
+  
+  appState.simulation.isRunning = true;
+  renderApp();
+  
+  setTimeout(() => {
+    try {
+      const prepResults = calculateFeedstockPrep(appState.config.feedstock, appState.config.feedRate);
+      const gasResults = calculateGasification(prepResults.dryBiomassOutput, appState.config.feedstock, appState.config.process);
+      const ftResults = calculateFTSynthesis(gasResults, appState.config.process);
+      const upgradeResults = calculateUpgrading(ftResults, appState.config.process);
+      
+      const massBalance = {
+        inputs: {
+          biomassWet: appState.config.feedRate,
+          biomassDry: prepResults.dryBiomassOutput,
+          hydrogen: ftResults.h2Shortfall + upgradeResults.h2Consumption,
+          water: prepResults.waterRemoved
+        },
+        outputs: {
+          saf: upgradeResults.safOutput,
+          naphtha: upgradeResults.naphthaOutput,
+          diesel: upgradeResults.dieselOutput,
+          offGases: upgradeResults.offGases,
+          ash: gasResults.ashOutput,
+          water: ftResults.waterProduced
+        }
+      };
+      
+      const simulation = {
+        feedstock: appState.config.feedstock,
+        feedRate: appState.config.feedRate,
+        operatingHours: appState.config.operatingHours,
+        hydrogenSource: appState.config.hydrogenSource,
+        selectedModules: appState.config.selectedModules,
+        prep: prepResults,
+        gasifier: gasResults,
+        gasification: gasResults,
+        ft: ftResults,
+        upgrading: upgradeResults,
+        hydrogen: {
+          required: ftResults.h2Shortfall + upgradeResults.h2Consumption,
+          requiredNm3: (ftResults.h2Shortfall + upgradeResults.h2Consumption) * 11.2
+        },
+        massBalance: massBalance
+      };
+      
+      simulation.energyBalance = calculateEnergyBalance(simulation, appState.config);
+      simulation.economics = calculateEconomics(simulation, appState.config);
+      simulation.environmental = calculateEnvironmentalImpact(simulation, appState.config);
+      
+      simulation.output = {
+        safKgHr: upgradeResults.safOutput,
+        safTonnesYr: upgradeResults.safOutput * appState.config.operatingHours / 1000,
+        safML: (upgradeResults.safOutput * appState.config.operatingHours) / 800 / 1000
+      };
+      
+      appState.simulation.results = simulation;
+      appState.simulation.warnings = validateResults(simulation);
+      appState.simulation.errors = [];
+      appState.simulation.hasResults = true;
+      
+    } catch (error) {
+      console.error('Simulation error:', error);
+      appState.simulation.errors = [{
+        severity: 'error',
+        message: `Simulation failed: ${error.message}. Please check your configuration and try again.`
+      }];
+      appState.simulation.hasResults = false;
+      appState.simulation.results = null;
+    } finally {
+      appState.simulation.isRunning = false;
+      renderApp();
+    }
+  }, 100);
+}
+
+// ============================================================================
+// UI RENDERING (updated with £ symbols)
+// ============================================================================
+
+function renderApp() {
+  renderTabs();
+  renderContent();
+}
+
+function renderTabs() {
+  const tabsContainer = document.getElementById('tabs');
+  const tabs = [
+    { id: 'configuration', icon: '⚙️', name: 'Configuration' },
+    { id: 'simulation', icon: '🔬', name: 'Simulation' },
+    { id: 'economics', icon: '💰', name: 'Economics' },
+    { id: 'environmental', icon: '🌍', name: 'Environmental' },
+    { id: 'scenarios', icon: '📊', name: 'Scenarios' }
+  ];
+  
+  tabsContainer.innerHTML = tabs.map(tab => `
+    <div class="tab ${appState.ui.activeTab === tab.id ? 'active' : ''}" 
+         onclick="switchTab('${tab.id}')">
+      ${tab.icon} ${tab.name}
+    </div>
+  `).join('');
+}
+
+function renderContent() {
+  const content = document.getElementById('content');
+  
+  switch(appState.ui.activeTab) {
+    case 'configuration':
+      content.innerHTML = renderConfigurationTab();
+      break;
+    case 'simulation':
+      content.innerHTML = renderSimulationTab();
+      setTimeout(initSimulationCharts, 50);
+      break;
+    case 'economics':
+      content.innerHTML = renderEconomicsTab();
+      setTimeout(initEconomicsCharts, 50);
+      break;
+    case 'environmental':
+      content.innerHTML = renderEnvironmentalTab();
+      setTimeout(initEnvironmentalCharts, 50);
+      break;
+    case 'scenarios':
+      content.innerHTML = renderScenariosTab();
+      break;
+  }
+}
+
+function renderConfigurationTab() {
+  const feedstockOptions = Object.keys(feedstockDatabase).map(key => {
+    const fs = feedstockDatabase[key];
+    const selected = appState.config.feedstock?.name === fs.name ? 'selected' : '';
+    return `<option value="${key}" ${selected}>${fs.name}</option>`;
+  }).join('');
+  
+  return `
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌾 Feedstock Selection</div>
+        <div class="form-group">
+          <label>Feedstock Type</label>
+          <select id="feedstockSelect" onchange="updateFeedstock(this.value)">
+            ${feedstockOptions}
+          </select>
+        </div>
+        
+        ${appState.config.feedstock ? `
+          <table style="font-size: 0.9rem; margin-top: 12px;">
+            <tr><td style="color: var(--muted); width: 50%;">Moisture Content</td><td><strong>${appState.config.feedstock.moisture}%</strong> (wet basis)</td></tr>
+            <tr><td style="color: var(--muted);">Ash Content</td><td><strong>${appState.config.feedstock.ashContent}%</strong> (dry basis)</td></tr>
+            <tr><td style="color: var(--muted);">Calorific Value</td><td><strong>${appState.config.feedstock.calorificValue} MJ/kg</strong> (dry)</td></tr>
+            <tr><td style="color: var(--muted);">Bulk Density</td><td><strong>${appState.config.feedstock.density} kg/m³</strong></td></tr>
+            <tr><td style="color: var(--muted);">Cost</td><td><strong>£${appState.config.feedstock.cost}/tonne</strong></td></tr>
+          </table>
+        ` : ''}
+      </div>
+      
+      <div class="card">
+        <div class="card-title">🏭 Plant Capacity</div>
+        
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Biomass Feed Rate</span>
+            <span class="slider-value" id="feedRateDisplay">${appState.config.feedRate} t/hr</span>
+          </div>
+          <input type="range" id="feedRate" min="10" max="25" value="${appState.config.feedRate}" step="1" 
+                 oninput="updateFeedRate(this.value)">
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">Design range: 10-25 t/hr</div>
+        </div>
+        
+        <div class="slider-container">
+          <div class="slider-label">
+            <span>Annual Operating Hours</span>
+            <span class="slider-value" id="opHoursDisplay">${appState.config.operatingHours} hr/yr</span>
+          </div>
+          <input type="range" id="operatingHours" min="6000" max="8400" value="${appState.config.operatingHours}" step="100" 
+                 oninput="updateOperatingHours(this.value)">
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">Typical: 8000 hr/yr (91% availability)</div>
+        </div>
+        
+        ${appState.simulation.hasResults && appState.simulation.results && appState.simulation.results.output ? `
+          <div style="background: rgba(6, 182, 212, 0.1); padding: 14px; border-radius: 8px; margin-top: 16px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: var(--muted);">Annual Throughput</span>
+              <span style="font-weight: 600;">${(appState.config.feedRate * appState.config.operatingHours).toLocaleString()} tonnes/yr</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--muted);">Expected SAF Output</span>
+              <span style="font-weight: 600; color: var(--accent);">${appState.simulation.results.output.safML.toFixed(2)} ML/yr</span>
+            </div>
+          </div>
+        ` : `
+          <div class="warning-box" style="margin-top: 16px;">
+            <strong>💡 Ready to simulate!</strong> Click "RUN SIMULATION" below to calculate outputs based on your configuration.
+          </div>
+        `}
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">⚡ Hydrogen Supply</div>
+      <p style="color: var(--muted); margin-bottom: 16px;">Fischer-Tropsch synthesis requires H2/CO ratio of 2.0-2.2. Select hydrogen source:</p>
+      
+      <div class="grid-3">
+        <div class="metric-card h2-card ${appState.config.hydrogenSource === 'electrolyzer' ? 'selected' : ''}" 
+             onclick="selectHydrogenSource('electrolyzer')">
+          <div style="font-weight: 600; margin-bottom: 12px; font-size: 1.1rem;">
+            <input type="radio" name="h2source" ${appState.config.hydrogenSource === 'electrolyzer' ? 'checked' : ''} style="margin-right: 8px;"> 
+            PEM Electrolyser
+          </div>
+          <div style="font-size: 0.85rem; color: var(--muted); text-align: left;">
+            • 27 MW electrical<br>
+            • £27M CAPEX<br>
+            • Zero direct CO2<br>
+            • 4.5 m³ water/hr
+          </div>
+        </div>
+        
+        <div class="metric-card h2-card ${appState.config.hydrogenSource === 'smr' ? 'selected' : ''}" 
+             onclick="selectHydrogenSource('smr')">
+          <div style="font-weight: 600; margin-bottom: 12px; font-size: 1.1rem;">
+            <input type="radio" name="h2source" ${appState.config.hydrogenSource === 'smr' ? 'checked' : ''} style="margin-right: 8px;"> 
+            SMR + PSA
+          </div>
+          <div style="font-size: 0.85rem; color: var(--muted); text-align: left;">
+            • Natural gas feed<br>
+            • £8M CAPEX<br>
+            • 9.5 kg CO2/kg H2<br>
+            • Lowest OPEX
+          </div>
+        </div>
+        
+        <div class="metric-card h2-card ${appState.config.hydrogenSource === 'pipeline' ? 'selected' : ''}" 
+             onclick="selectHydrogenSource('pipeline')">
+          <div style="font-weight: 600; margin-bottom: 12px; font-size: 1.1rem;">
+            <input type="radio" name="h2source" ${appState.config.hydrogenSource === 'pipeline' ? 'checked' : ''} style="margin-right: 8px;"> 
+            Pipeline Supply
+          </div>
+          <div style="font-size: 0.85rem; color: var(--muted); text-align: left;">
+            • £3.75/kg delivered<br>
+            • £125k connection<br>
+            • 98% reliability<br>
+            • Min 100 t/yr contract
+          </div>
+        </div>
+      </div>
+      
+      ${appState.simulation.hasResults && appState.simulation.results && appState.simulation.results.hydrogen ? `
+        <div class="warning-box" style="margin-top: 16px;">
+          <strong>H2 Requirement:</strong> ${appState.simulation.results.hydrogen.required.toFixed(0)} kg/hr 
+          (${appState.simulation.results.hydrogen.requiredNm3.toFixed(0)} Nm³/hr)
+        </div>
+      ` : ''}
+    </div>
+    
+    <div class="card">
+      <div class="card-title">📦 Equipment Modules <span style="font-size: 1rem; color: var(--muted); margin-left: 10px;">Total: <strong id="teuCount">${calculateTotalTEU(appState.config.selectedModules)}</strong> TEU</span></div>
+      
+      <div style="max-height: 500px; overflow-y: auto;">
+        ${renderEquipmentList()}
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <label style="margin-right: 20px; font-size: 1.05rem;">
+        <input type="checkbox" ${appState.ui.autoSimulate ? 'checked' : ''} onchange="toggleAutoSimulate()" style="margin-right: 8px;"> 
+        Auto-simulate on changes
+      </label>
+      
+      <button class="primary" onclick="runSimulation()">
+        ${appState.simulation.isRunning ? '⏳ Running Simulation...' : '▶️ RUN SIMULATION'}
+      </button>
+      
+      <button class="danger" onclick="resetToDefaults()">
+        🔄 Reset to Defaults
+      </button>
+    </div>
+  `;
+}
+
+function renderEquipmentList() {
+  const categories = {
+    'Feedstock Preparation': ['feedstock_shredder', 'feedstock_dryer', 'metal_separator'],
+    'Gasification': ['gasifier_reactor', 'syngas_cleanup', 'wet_scrubber'],
+    'Compression': ['main_compressor', 'recycle_compressor'],
+    'Fischer-Tropsch': ['ft_reactor'],
+    'Upgrading': ['hydrocracker', 'psa_h2', 'fractionation'],
+    'Hydrogen Supply': ['electrolyzer', 'smr_unit'],
+    'Utilities': ['mcc_transformers', 'water_treatment', 'control_room', 'laboratory']
+  };
+  
+  let html = '';
+  
+  Object.entries(categories).forEach(([category, moduleIds]) => {
+    html += `<div style="margin-bottom: 24px;">
+      <h4 style="color: var(--accent); margin-bottom: 12px; font-size: 1.1rem;">${category}</h4>`;
+    
+    moduleIds.forEach(moduleId => {
+      const module = equipmentModules[moduleId];
+      if (!module) return;
+      
+      const isSelected = appState.config.selectedModules.find(m => m.id === module.id);
+      const disabled = module.mandatory ? 'disabled' : '';
+      
+      html += `
+        <div class="equipment-item">
+          <input type="checkbox" 
+                 id="module_${module.id}" 
+                 ${isSelected ? 'checked' : ''} 
+                 ${disabled}
+                 onchange="toggleModule('${moduleId}')">
+          <label for="module_${module.id}" style="flex: 1;">
+            <strong>${module.name}</strong>
+            <span style="color: var(--muted); font-size: 0.85rem; margin-left: 10px;">
+              ${module.containerSize}
+            </span>
+            ${module.mandatory ? '<span class="badge badge-mandatory" style="margin-left: 8px;">Mandatory</span>' : '<span class="badge badge-optional" style="margin-left: 8px;">Optional</span>'}
+          </label>
+          <span style="color: var(--muted); font-size: 0.9rem; margin-right: 10px;">
+            £${(module.capex / 1000).toFixed(0)}k
+          </span>
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+  });
+  
+  return html;
+}
+
+function renderSimulationTab() {
+  if (!appState.simulation.hasResults) {
+    return `
+      <div class="card" style="text-align: center; padding: 60px;">
+        <h2 style="color: var(--muted); margin-bottom: 16px;">No simulation results yet</h2>
+        <p style="color: var(--muted); margin-bottom: 24px;">Configure your plant and run a simulation to see results.</p>
+        ${appState.simulation.errors.length > 0 ? `
+          <div class="error-box" style="text-align: left; margin: 0 auto 24px; max-width: 600px;">
+            <div style="font-weight: 600; margin-bottom: 8px;">❌ Simulation Error</div>
+            ${appState.simulation.errors.map(err => `<div>• ${err.message}</div>`).join('')}
+          </div>
+        ` : ''}
+        <button onclick="switchTab('configuration')" style="margin-top: 20px;">Go to Configuration →</button>
+      </div>
+    `;
+  }
+  
+  const results = appState.simulation.results;
+  
+  if (!results || !results.output) {
+    return `
+      <div class="card loading">
+        <h2>Loading simulation results...</h2>
+        <p>Please wait while calculations complete.</p>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="grid-4" style="margin-bottom: 24px;">
+      <div class="metric-card">
+        <div class="metric-label">SAF Output</div>
+        <div class="metric-value">${results.output.safML.toFixed(2)}</div>
+        <div class="metric-unit">ML/year</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Overall Efficiency</div>
+        <div class="metric-value" style="color: ${results.energyBalance.efficiency > 65 ? 'var(--green)' : results.energyBalance.efficiency > 55 ? 'var(--yellow)' : 'var(--red)'};">
+          ${results.energyBalance.efficiency.toFixed(1)}
+        </div>
+        <div class="metric-unit">%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">LCOSAF</div>
+        <div class="metric-value" style="color: ${results.economics.lcosaf < 5.0 ? 'var(--green)' : results.economics.lcosaf < 6.0 ? 'var(--yellow)' : 'var(--red)'};">
+          £${results.economics.lcosaf.toFixed(2)}
+        </div>
+        <div class="metric-unit">/litre</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">CO2 Reduction</div>
+        <div class="metric-value" style="color: ${results.environmental.reductionPercentage > 80 ? 'var(--green)' : results.environmental.reductionPercentage > 70 ? 'var(--yellow)' : 'var(--red)'};">
+          ${results.environmental.reductionPercentage.toFixed(1)}
+        </div>
+        <div class="metric-unit">%</div>
+      </div>
+    </div>
+    
+    ${renderWarningsErrors()}
+    
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">⚖️ Mass Balance</div>
+        <canvas id="massBalanceChart"></canvas>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">⚡ Energy Balance</div>
+        <canvas id="energyBalanceChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">🔬 Process Performance</div>
+      <div class="grid-3">
+        ${renderProcessMetrics(results)}
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 24px;">
+      <button onclick="saveCurrentScenario()">💾 Save Scenario</button>
+      <button onclick="exportReport('json')">📄 Export JSON</button>
+      <button onclick="exportReport('csv')">📊 Export CSV</button>
+      <button onclick="exportReport('text')">📝 Export Text Report</button>
+    </div>
+  `;
+}
+
+function renderWarningsErrors() {
+  if (appState.simulation.warnings.length === 0 && appState.simulation.errors.length === 0) {
+    return '';
+  }
+  
+  let html = '';
+  
+  if (appState.simulation.errors.length > 0) {
+    html += `<div class="error-box">
+      <div style="font-weight: 600; margin-bottom: 8px; font-size: 1.1rem;">❌ Errors</div>`;
+    appState.simulation.errors.forEach(err => {
+      html += `<div style="margin-bottom: 8px;">• ${err.message}</div>`;
+    });
+    html += `</div>`;
+  }
+  
+  if (appState.simulation.warnings.length > 0) {
+    html += `<div class="warning-box">
+      <div style="font-weight: 600; margin-bottom: 12px; font-size: 1.1rem;">⚠️ Warnings</div>`;
+    appState.simulation.warnings.forEach(warn => {
+      html += `<div style="margin-bottom: 12px;">
+        <strong>${warn.location}:</strong> ${warn.message}
+        ${warn.solution ? `<br><span style="color: var(--muted); font-size: 0.9rem; margin-left: 20px;">→ ${warn.solution}</span>` : ''}
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  
+  return html;
+}
+
+function renderProcessMetrics(results) {
+  return `
+    <div style="background: rgba(6, 182, 212, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">Syngas Flow</div>
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">
+        ${results.gasification.syngasFlow.toFixed(0)} <span style="font-size: 1rem;">Nm³/hr</span>
+      </div>
+    </div>
+    
+    <div style="background: rgba(6, 182, 212, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">H2/CO Ratio</div>
+      <div style="font-size: 1.8rem; font-weight: 700; color: ${results.gasification.h2coRatio >= 2.0 && results.gasification.h2coRatio <= 2.2 ? 'var(--green)' : 'var(--yellow)'};">
+        ${results.gasification.h2coRatio.toFixed(2)}
+      </div>
+    </div>
+    
+    <div style="background: rgba(6, 182, 212, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">FT Conversion</div>
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent);">
+        ${(results.ft.coConversion * 100).toFixed(1)} <span style="font-size: 1rem;">%</span>
+      </div>
+    </div>
+    
+    <div style="background: rgba(16, 185, 129, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">Liquid Production</div>
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--green);">
+        ${results.ft.liquidProduction.toFixed(0)} <span style="font-size: 1rem;">kg/hr</span>
+      </div>
+    </div>
+    
+    <div style="background: rgba(16, 185, 129, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">SAF Output</div>
+      <div style="font-size: 1.8rem; font-weight: 700; color: var(--green);">
+        ${results.upgrading.safOutput.toFixed(0)} <span style="font-size: 1rem;">kg/hr</span>
+      </div>
+    </div>
+    
+    <div style="background: rgba(6, 182, 212, 0.08); padding: 18px; border-radius: 8px; border: 1px solid rgba(6, 182, 212, 0.2);">
+      <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 6px;">Co-products</div>
+      <div style="font-size: 1.1rem; font-weight: 600; color: var(--accent);">
+        Naphtha: ${results.upgrading.naphthaOutput.toFixed(0)} kg/hr<br>
+        Diesel: ${results.upgrading.dieselOutput.toFixed(0)} kg/hr
+      </div>
+    </div>
+  `;
+}
+
+function renderEconomicsTab() {
+  if (!appState.simulation.hasResults) {
+    return `<div class="card loading"><h2>Run a simulation first</h2></div>`;
+  }
+  
+  const results = appState.simulation.results;
+  
+  return `
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <div class="metric-card">
+        <div class="metric-label">Total CAPEX</div>
+        <div class="metric-value">£${(results.economics.totalCapex / 1000000).toFixed(1)}</div>
+        <div class="metric-unit">Million</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Annual OPEX</div>
+        <div class="metric-value">£${(results.economics.totalOpex / 1000000).toFixed(1)}</div>
+        <div class="metric-unit">Million/year</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Annual Revenue</div>
+        <div class="metric-value" style="color: var(--green);">£${(results.economics.totalRevenue / 1000000).toFixed(1)}</div>
+        <div class="metric-unit">Million/year</div>
+      </div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">💰 CAPEX Breakdown</div>
+        <canvas id="capexChart"></canvas>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">💵 Annual OPEX Breakdown</div>
+        <canvas id="opexChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">📊 Financial Metrics</div>
+      <div class="grid-4" style="margin-top: 20px;">
+        <div style="background: rgba(6, 182, 212, 0.08); padding: 20px; border-radius: 8px;">
+          <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 8px;">LCOSAF</div>
+          <div style="font-size: 2rem; font-weight: 700; color: ${results.economics.lcosaf < 5.0 ? 'var(--green)' : 'var(--yellow)'};">
+            £${results.economics.lcosaf.toFixed(2)}/L
+          </div>
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">Target: <£5.00/L</div>
+        </div>
+        
+        <div style="background: rgba(16, 185, 129, 0.08); padding: 20px; border-radius: 8px;">
+          <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 8px;">NPV (20yr)</div>
+          <div style="font-size: 2rem; font-weight: 700; color: ${results.economics.npv > 0 ? 'var(--green)' : 'var(--red)'};">
+            £${(results.economics.npv / 1000000).toFixed(1)}M
+          </div>
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">@ ${(appState.config.economics.discountRate * 100).toFixed(0)}% discount</div>
+        </div>
+        
+        <div style="background: rgba(16, 185, 129, 0.08); padding: 20px; border-radius: 8px;">
+          <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 8px;">IRR</div>
+          <div style="font-size: 2rem; font-weight: 700; color: ${results.economics.irr > 12 ? 'var(--green)' : 'var(--yellow)'};">
+            ${results.economics.irr.toFixed(1)}%
+          </div>
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">Minimum: 12%</div>
+        </div>
+        
+        <div style="background: rgba(6, 182, 212, 0.08); padding: 20px; border-radius: 8px;">
+          <div style="color: var(--muted); font-size: 0.875rem; margin-bottom: 8px;">Payback Period</div>
+          <div style="font-size: 2rem; font-weight: 700; color: ${results.economics.paybackPeriod < 7 ? 'var(--green)' : 'var(--yellow)'};">
+            ${results.economics.paybackPeriod.toFixed(1)} yrs
+          </div>
+          <div style="color: var(--muted); font-size: 0.85rem; margin-top: 4px;">Target: <7 years</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEnvironmentalTab() {
+  if (!appState.simulation.hasResults) {
+    return `<div class="card loading"><h2>Run a simulation first</h2></div>`;
+  }
+  
+  const results = appState.simulation.results;
+  
+  return `
+    <div class="grid-3" style="margin-bottom: 24px;">
+      <div class="metric-card">
+        <div class="metric-label">CO2 Emissions</div>
+        <div class="metric-value">${(results.environmental.totalEmissions / 1000000).toFixed(1)}</div>
+        <div class="metric-unit">tonnes/year</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">CO2 Avoided</div>
+        <div class="metric-value" style="color: var(--green);">${(results.environmental.co2Avoided / 1000000).toFixed(1)}</div>
+        <div class="metric-unit">tonnes/year</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Reduction vs Fossil</div>
+        <div class="metric-value" style="color: ${results.environmental.reductionPercentage > 80 ? 'var(--green)' : results.environmental.reductionPercentage > 70 ? 'var(--yellow)' : 'var(--red)'};">
+          ${results.environmental.reductionPercentage.toFixed(1)}
+        </div>
+        <div class="metric-unit">%</div>
+      </div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌍 CO2 Emissions Breakdown</div>
+        <canvas id="co2Chart"></canvas>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">💧 Water Consumption</div>
+        <canvas id="waterChart"></canvas>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(6, 182, 212, 0.05); border-radius: 8px;">
+          <strong>Total Water Use:</strong> ${(results.environmental.waterConsumption / 1000000).toFixed(2)} million L/year<br>
+          <strong>Water Intensity:</strong> ${results.environmental.waterIntensity.toFixed(1)} L water/kg SAF
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-title">♻️ Waste Streams</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Waste Type</th>
+            <th>Annual Amount</th>
+            <th>Unit</th>
+            <th>Disposal/Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ash</td>
+            <td>${results.environmental.wasteStreams.ash.toFixed(0)}</td>
+            <td>tonnes/year</td>
+            <td>Potential use as fertiliser</td>
+          </tr>
+          <tr>
+            <td>Char</td>
+            <td>${results.environmental.wasteStreams.char.toFixed(0)}</td>
+            <td>tonnes/year</td>
+            <td>Combustion for energy</td>
+          </tr>
+          <tr>
+            <td>Wastewater</td>
+            <td>${results.environmental.wasteStreams.wastewater.toFixed(0)}</td>
+            <td>m³/year</td>
+            <td>Treatment required</td>
+          </tr>
+          <tr>
+            <td>Spent Catalyst</td>
+            <td>${results.environmental.wasteStreams.spentCatalyst.toFixed(2)}</td>
+            <td>tonnes/year</td>
+            <td>Regeneration/recycling</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderScenariosTab() {
+  if (appState.scenarios.length === 0) {
+    return `
+      <div class="card loading">
+        <h2>No saved scenarios</h2>
+        <p>Run a simulation and save it to compare scenarios.</p>
+        <button onclick="switchTab('configuration')" style="margin-top: 20px;">Go to Configuration →</button>
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="card">
+      <div class="card-title">📊 Saved Scenarios</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Date</th>
+            <th>Feedstock</th>
+            <th>SAF Output</th>
+            <th>LCOSAF</th>
+            <th>NPV</th>
+            <th>CO2 Reduction</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${appState.scenarios.map(s => `
+            <tr>
+              <td style="font-weight: 600;">${s.name}</td>
+              <td>${new Date(s.timestamp).toLocaleDateString('en-GB')}</td>
+              <td>${s.config.feedstock.name}</td>
+              <td>${s.results.output.safML.toFixed(2)} ML/yr</td>
+              <td>£${s.results.economics.lcosaf.toFixed(2)}/L</td>
+              <td>£${(s.results.economics.npv / 1000000).toFixed(1)}M</td>
+              <td>${s.results.environmental.reductionPercentage.toFixed(1)}%</td>
+              <td>
+                <button onclick="loadScenario(${s.id})" style="padding: 6px 14px;">Load</button>
+                <button class="danger" onclick="delete
